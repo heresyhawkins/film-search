@@ -1,0 +1,56 @@
+.movie-search {
+  font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
+  padding: 20px;
+  max-width: 1400;
+  width: 1270px;
+  margin: 0 auto;
+}
+
+.movie-search__title {
+  text-align: center;
+  font-size: 40px;
+}
+
+.movie-search__form {
+  padding: 20px;
+  border: 2px solid white;
+}
+
+.movie-search__label {
+  font-size: 20px;
+  margin-right: 15px;
+}
+
+.movie-search__input {
+  border: 1px solid white;
+  margin-right: 15px;
+  padding: 5px;
+}
+
+.movie-search__button {
+  border: 2px solid white;
+  padding: 5px;
+  cursor: pointer;
+}
+
+.movie-search__grid {
+  text-align: center;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 10px;
+  gap: 10px;
+}
+
+.movie-card {
+  padding: 10px;
+  border: 2px solid white;
+  border-radius: 5%;
+  width: 400px;
+}
+
+.movie-card__poster {
+  margin: 0 auto;
+  width: 260px;
+  height: 280px;
+  object-fit: contain;
+}

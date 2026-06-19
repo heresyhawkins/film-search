@@ -9,16 +9,23 @@ export async function fetchMovies(
   const params = new URLSearchParams();
 
   if (filters.year) params.append("year", String(filters.year));
-  if (filters.genre) params.append("genre", String(filters.genre));
+  if (filters.genre)
+    params.append("genres.name", filters.genre.toLocaleLowerCase());
   if (filters.page) params.append("page", String(filters.page));
   params.append("limit", String(filters.limit ?? 10));
 
-  const url = `${API_URL}/movie${params.toString()}`;
+  const url = `${API_URL}/movie?${params.toString()}`;
 
   const response = await fetch(url, {
-    headers: { "X-API-KEY": API_TOKEN },
-    "Content-type": "aplication/json",
+    headers: {
+      "X-API-Key": API_TOKEN,
+      "Content-Type": "application/json",
+    },
   });
+
+  if (!response.ok) {
+    throw new Error(`Ошибка API: ${response.status}`);
+  }
 
   return response.json();
 }
