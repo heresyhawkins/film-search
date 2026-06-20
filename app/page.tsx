@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent, useCallback } from "react";
+import { useState, FormEvent, useCallback, SyntheticEvent } from "react";
 import type { Movie } from "./types/movie";
 import { fetchMovies } from "./utils/api";
 import "./page.css";
@@ -34,7 +34,7 @@ export default function Home() {
     }
   }, [year, genre]);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = (e: SyntheticEvent) => {
     e.preventDefault();
     searchMovies();
   };
