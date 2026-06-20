@@ -8,10 +8,18 @@ export async function fetchMovies(
 ): Promise<MoviesResponse> {
   const params = new URLSearchParams();
 
-  if (filters.year) params.append("year", String(filters.year));
-  if (filters.genre)
+  if (filters.year) {
+    params.append("year", String(filters.year));
+  }
+
+  if (filters.genre) {
     params.append("genres.name", filters.genre.toLocaleLowerCase());
-  if (filters.page) params.append("page", String(filters.page));
+  }
+
+  if (filters.page) {
+    params.append("page", String(filters.page));
+  }
+
   params.append("limit", String(filters.limit ?? 10));
 
   const url = `${API_URL}/movie?${params.toString()}`;
