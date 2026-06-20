@@ -22,7 +22,7 @@ export async function fetchMovies(
 
   params.append("limit", String(filters.limit ?? 10));
 
-  const url = `${API_URL}/movie?${params.toString()}`;
+  const url = `${API_URL}/v1.4/movie?${params.toString()}`;
 
   const response = await fetch(url, {
     headers: {
