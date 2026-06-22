@@ -1,39 +1,24 @@
-import { MoviesResponse, MovieFilters } from "../types/movie";
+import { ShowFilters } from "../types/movie";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-const API_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
+const BASE_URL = "https://api.tvmaze.com";
 
-export async function fetchMovies(
-  filters: MovieFilters = {},
-): Promise<MoviesResponse> {
-  const params = new URLSearchParams();
+export const fetchShows = async (filters: ShowFilters = {}): Promise<any> => {
+  let url: string;
 
-  if (filters.year) {
-    params.append("year", String(filters.year));
+  if (filters.title) {
+    url = `${BASE_URL}/search/shows?q=${encodeURIComponent(filters.title)}`;
+  } else if (filters.genre) {
+    url = `${BASE_URL}/shows?genre=${encodeURIComponent(filters.genre)}`;
+  } else {
+    return [];
   }
 
-  if (filters.genre) {
-    params.append("genres.name", filters.genre.toLocaleLowerCase());
-  }
-
-  if (filters.page) {
-    params.append("page", String(filters.page));
-  }
-
-  params.append("limit", String(filters.limit ?? 10));
-
-  const url = `${API_URL}/v1.4/movie?${params.toString()}`;
-
-  const response = await fetch(url, {
-    headers: {
-      "X-API-Key": API_TOKEN,
-      "Content-Type": "application/json",
-    },
-  });
+  const response = await fetch(url);
 
   if (!response.ok) {
-    throw new Error(`Ошибка API: ${response.status}`);
+    throw new Error(`Error API: ${response.status}`);
   }
 
-  return response.json();
-}
+  const data = await response.json();
+  return data;
+};

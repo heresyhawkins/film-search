@@ -1,46 +1,35 @@
-interface NameEntry {
-  name: string;
-  language: string | null;
-  type: string;
-}
-
-interface Genre {
-  name: string;
-}
-
-interface Country {
-  name: string;
-}
-
-export interface Movie {
-  id: number;
-  name: string;
-  names?: NameEntry[];
-  genres?: Genre[];
-  countries?: Country[];
-  year: number;
-  description: string;
-  poster?: { url: string; previewUrl: "string" };
-  rating?: {
-    kp?: number;
-    imdb?: number;
-    filmCritics?: number;
-    russianFilmCritics?: number;
-    await?: number;
-  };
-}
-
-export interface MoviesResponse {
-  docs: Movie[];
-  total: number;
-  limit: number;
-  page: number;
-  pages: number;
-}
-
-export interface MovieFilters {
-  year?: number;
+export interface ShowFilters {
+  title?: string;
   genre?: string;
   page?: number;
   limit?: number;
+}
+
+interface TVMazeShowImage {
+  medium?: string;
+  original?: string;
+}
+
+export interface TVMazeShow {
+  id: number;
+  name: string;
+  genres: string[];
+  image?: TVMazeShowImage;
+  premiered: string;
+  rating?: {
+    average: number;
+  };
+  status: string;
+  summary?: string;
+  network?: {
+    name: string;
+  };
+  webChannel?: {
+    name: string;
+  };
+}
+
+export interface TVMazeSearchResult {
+  score: number;
+  show: TVMazeShow;
 }

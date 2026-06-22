@@ -1,132 +1,131 @@
 "use client";
 
-import { useState, FormEvent, useCallback, SyntheticEvent } from "react";
-import type { Movie } from "./types/movie";
-import { fetchMovies } from "./utils/api";
+import { useState, useCallback, SyntheticEvent } from "react";
+import { fetchShows } from "./utils/api";
+import type { TVMazeShow, TVMazeSearchResult } from "./types/movie";
 import "./page.css";
 
 export default function Home() {
-  const [year, setYear] = useState("");
+  const [title, setTitle] = useState("");
   const [genre, setGenre] = useState("");
-  const [movies, setMovies] = useState<Movie[]>([]);
+  const [shows, setShows] = useState<TVMazeShow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const searchMovies = useCallback(async () => {
+  const searchShows = useCallback(async () => {
     setLoading(true);
     setError(null);
     setHasSearched(true);
 
     try {
-      const data = await fetchMovies({
-        year: year ? Number(year) : undefined,
+      const data = await fetchShows({
+        title: title || undefined,
         genre: genre || undefined,
       });
-      setMovies(data.docs);
-      console.log(data.docs);
+
+      let showsArray: TVMazeShow[] = [];
+
+      if (Array.isArray(data)) {
+        if (data.length > 0 && "show" in data[0]) {
+          showsArray = (data as TVMazeSearchResult[]).map((item) => item.show);
+        } else {
+          showsArray = data as TVMazeShow[];
+        }
+      }
+
+      setShows(showsArray);
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Произошла неизвестная ошибка";
+      const message = err instanceof Error ? err.message : "Undefined";
       setError(message);
     } finally {
       setLoading(false);
     }
-  }, [year, genre]);
+  }, [title, genre]);
 
   const handleSubmit = (e: SyntheticEvent) => {
     e.preventDefault();
-    searchMovies();
+    searchShows();
+  };
+
+  const getYear = (premiered: string) => {
+    if (!premiered) return "N/A";
+    return premiered.split("-")[0];
   };
 
   return (
-    <div className="movie-search">
-      <h1 className="movie-search__title">Поиск фильмов</h1>
+    <div className="show-search">
+      <h1 className="show-search__title">Show Search</h1>
 
-      <form onSubmit={handleSubmit} className="movie-search__form">
-        <label className="movie-search__label" htmlFor="year-input">
-          Год
-        </label>
-        <input
-          id="year-input"
-          className="movie-search__input"
-          type="number"
-          placeholder="Год(1900 - 2026)"
-          value={year}
-          onChange={(e) => setYear(e.target.value)}
-        />
-
-        <label className="movie-search__label" htmlFor="genre-input">
-          Жанр
-        </label>
-        <input
-          id="genre-input"
-          className="movie-search__input"
-          type="text"
-          placeholder="Жанр"
-          value={genre}
-          onChange={(e) => setGenre(e.target.value)}
-        />
-
-        <button
-          type="submit"
-          className="movie-search__button"
-          disabled={loading}
-        >
-          {loading ? "Поиск..." : "Найти"}
-        </button>
+      <form onSubmit={handleSubmit} className="show-search__form">
+        <div>
+          {" "}
+          <label className="show-search__label">Title</label>
+          <input
+            id="title-input"
+            className="show-search__input"
+            type="text"
+            placeholder="Enter the title of the show"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          <label className="show-search__label">Genre</label>
+          <input
+            id="genre-input"
+            className="show-search__input"
+            type="text"
+            placeholder="Drama, Comedy, Horror f.e."
+            value={genre}
+            onChange={(e) => setGenre(e.target.value)}
+          />
+        </div>
+        <div>
+          <button
+            type="submit"
+            className="show-search__button"
+            disabled={loading}
+          >
+            {loading ? "Search..." : "Find"}
+          </button>
+        </div>
       </form>
 
-      <div className="movie-search__grid">
-        {movies.map((movie) => {
-          return (
-            <article key={movie.id} className="movie-card">
-              <img
-                className="movie-card__poster"
-                src={movie.poster?.url || "/undefined.jpeg"}
-                alt={movie.name}
-              />
-              <h3 className="movie-card__title">{movie.names?.[0]?.name}</h3>
-              <h3 className="movie-card__genres">
-                {movie.genres?.length > 0 ? (
-                  <span>
-                    {movie.genres.map((genre, index) => (
-                      <span key={index}>
-                        {genre.name}
-                        {index < movie.genres.length - 1 && ", "}
-                      </span>
-                    ))}
-                  </span>
-                ) : (
-                  <span>Нет данных</span>
-                )}
+      <div className="show-search__grid">
+        {shows.map((show) => (
+          <article key={show.id} className="show-card">
+            <img
+              className="show-card__poster"
+              src={show.image?.medium || "/undefined.jpeg"}
+              alt={show.name}
+            />
+            <h3 className="show-card__title">{show.name}</h3>
+            <h3 className="show-card__genres">
+              Genre : {show.genres?.join(", ") || "N/A"}
+            </h3>
+            {show.network?.name && (
+              <h3 className="show-card__network">
+                NetWork : {show.network.name}
               </h3>
-              <h3 className="movie-card__countries">
-                {movie.countries?.length > 0 ? (
-                  <span>
-                    {movie.countries.map((country, index) => (
-                      <span key={index}>
-                        {country.name}
-                        {index < movie.countries.length - 1 && ", "}
-                      </span>
-                    ))}
-                  </span>
-                ) : (
-                  <span>Нет данных</span>
-                )}
+            )}
+            {show.webChannel?.name && (
+              <h3 className="show-card__network">
+                Channel : {show.webChannel.name}
               </h3>
-              <p className="movie-card__info">
-                Год: {movie.year}, КП: {movie.rating?.kp ?? "-"}, IMDb:{" "}
-                {movie.rating?.imdb ?? "-"}
-              </p>
-            </article>
-          );
-        })}
+            )}
+            <p className="show-card__info">
+              Year: {getYear(show.premiered)}, Rating:{" "}
+              {show.rating?.average || "N/A"}
+            </p>
+            <p className="show-card__info">Status: {show.status}</p>
+          </article>
+        ))}
       </div>
 
-      {!loading && hasSearched && movies.length === 0 && !error && (
-        <p className="movie-search__empty">Фильмы не найдены</p>
+      {!loading && hasSearched && shows.length === 0 && !error && (
+        <p className="show-search__empty">Shows not found </p>
       )}
+
+      {error && <p className="show-search__error">Error: {error}</p>}
     </div>
   );
 }
