@@ -1,5 +1,10 @@
+body {
+  background-color: #0a0a0a;
+  color: #ededed;
+}
+
 .show-search {
-  font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
+  font-family: "Gill Sans", sans-serif;
   padding: 20px;
   max-width: 1400;
   width: 1270px;
@@ -15,7 +20,7 @@
   display: flex;
   justify-content: space-between;
   padding: 20px;
-  border: 2px solid white;
+  border: 2px solid #ffffff;
 }
 
 .show-search__label {
@@ -24,16 +29,19 @@
 }
 
 .show-search__input {
-  border: 1px solid white;
+  border: 1px solid #ffffff;
   margin-right: 15px;
   padding: 5px;
+  background-color: #0000;
 }
 
 .show-search__button {
-  border: 2px solid white;
+  border: 2px solid #ffffff;
   padding: 5px;
   cursor: pointer;
   width: 100px;
+  background-color: #0000;
+  color: #ffffff;
 }
 
 .show-search__grid {
@@ -46,9 +54,9 @@
 
 .show-card {
   padding: 10px;
-  border: 2px solid white;
+  border: 2px solid #ffffff;
   border-radius: 5%;
-  width: 400px;
+  width: 395px;
 }
 
 .show-card__poster {

@@ -2,7 +2,9 @@ import { ShowFilters } from "../types/movie";
 
 const BASE_URL = "https://api.tvmaze.com";
 
-export const fetchShows = async (filters: ShowFilters = {}): Promise<any> => {
+export const fetchShows = async (
+  filters: ShowFilters = {},
+): Promise<unknown> => {
   let url: string;
 
   if (filters.title) {
@@ -20,5 +22,6 @@ export const fetchShows = async (filters: ShowFilters = {}): Promise<any> => {
   }
 
   const data = await response.json();
+
   return data;
 };

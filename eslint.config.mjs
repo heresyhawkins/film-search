@@ -1,39 +1,55 @@
 import js from "@eslint/js";
 import globals from "globals";
-import reactHooks from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
-import react from "eslint-plugin-react";
 import tseslint from "typescript-eslint";
-import eslintPluginPrettier from "eslint-plugin-prettier/recommended";
-import reactCompiler from "eslint-plugin-react-compiler";
+import reactPlugin from "eslint-plugin-react";
+import reactHooks from "eslint-plugin-react-hooks";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 import nextPlugin from "@next/eslint-plugin-next";
+import simpleImportSort from "eslint-plugin-simple-import-sort";
 
 export default tseslint.config([
-  { ignores: ["dist", "coverage", "node_modules"] },
+  { ignores: ["dist", "coverage", "node_modules", ".next"] },
   {
     extends: [
       js.configs.recommended,
-      ...tseslint.configs.strict,
-      eslintPluginPrettier,
+      ...tseslint.configs.strictTypeChecked,
+      ...tseslint.configs.stylisticTypeChecked,
     ],
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+      parserOptions: {
+        projectService: true,
+      },
     },
     plugins: {
-      react,
+      react: reactPlugin,
       "react-hooks": reactHooks,
-      "react-refresh": reactRefresh,
-      "react-compiler": reactCompiler,
+      "jsx-a11y": jsxA11y,
       "@next/next": nextPlugin,
+      "simple-import-sort": simpleImportSort,
     },
     rules: {
+      // React
+      ...reactPlugin.configs.recommended.rules,
+      ...reactPlugin.configs["jsx-runtime"].rules,
+
+      // React Hooks
       ...reactHooks.configs.recommended.rules,
-      "react-refresh/only-export-components": [
-        "warn",
-        { allowConstantExport: true },
-      ],
+
+      // Accessibility
+      ...jsxA11y.flatConfigs.recommended.rules,
+
+      // Next.js
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs["core-web-vitals"].rules,
+
+      // TypeScript
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
@@ -45,10 +61,24 @@ export default tseslint.config([
           caughtErrorsIgnorePattern: "^_",
         },
       ],
-      "react-compiler/react-compiler": "error",
-      ...react.configs.recommended.rules,
-      ...react.configs["jsx-runtime"].rules,
-      ...nextPlugin.configs["core-web-vitals"].rules,
+      "@typescript-eslint/no-misused-promises": [
+        "error",
+        { checksVoidReturn: { attributes: false } },
+      ],
+
+      "@typescript-eslint/restrict-template-expressions": "off",
+
+      // Imports
+      "simple-import-sort/imports": "error",
+      "simple-import-sort/exports": "error",
+
+      // General
+      "no-console": ["warn", { allow: ["warn", "error"] }],
+      "padding-line-between-statements": [
+        "error",
+        { blankLine: "always", prev: "*", next: "return" },
+      ],
+      curly: ["error", "all"],
     },
     settings: {
       react: {

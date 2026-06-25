@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useCallback, SyntheticEvent } from "react";
-import { fetchShows } from "./utils/api";
-import type { TVMazeShow, TVMazeSearchResult } from "./types/movie";
 import "./page.css";
 
-export default function Home() {
+import Image from "next/image";
+import { SyntheticEvent, useCallback, useState } from "react";
+
+import type { TVMazeSearchResult, TVMazeShow } from "./types/movie";
+import { fetchShows } from "./utils/api";
+
+const Home = () => {
   const [title, setTitle] = useState("");
   const [genre, setGenre] = useState("");
   const [shows, setShows] = useState<TVMazeShow[]>([]);
@@ -20,8 +23,8 @@ export default function Home() {
 
     try {
       const data = await fetchShows({
-        title: title || undefined,
-        genre: genre || undefined,
+        title: title,
+        genre: genre,
       });
 
       let showsArray: TVMazeShow[] = [];
@@ -36,7 +39,8 @@ export default function Home() {
 
       setShows(showsArray);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Undefined";
+      const message =
+        err instanceof Error ? err.message : "Failed to fetch shows data";
       setError(message);
     } finally {
       setLoading(false);
@@ -45,12 +49,15 @@ export default function Home() {
 
   const handleSubmit = (e: SyntheticEvent) => {
     e.preventDefault();
-    searchShows();
+    void searchShows();
   };
 
-  const getYear = (premiered: string) => {
-    if (!premiered) return "N/A";
-    return premiered.split("-")[0];
+  const getYear = (premieredYear: string) => {
+    if (!premieredYear) {
+      return "N/A";
+    }
+
+    return premieredYear.split("-")[0];
   };
 
   return (
@@ -59,24 +66,31 @@ export default function Home() {
 
       <form onSubmit={handleSubmit} className="show-search__form">
         <div>
-          {" "}
-          <label className="show-search__label">Title</label>
+          <label className="show-search__label" htmlFor="title-input">
+            Title
+          </label>
           <input
             id="title-input"
             className="show-search__input"
             type="text"
             placeholder="Enter the title of the show"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+            }}
           />
-          <label className="show-search__label">Genre</label>
+          <label className="show-search__label" htmlFor="genre-input">
+            Genre
+          </label>
           <input
             id="genre-input"
             className="show-search__input"
             type="text"
             placeholder="Drama, Comedy, Horror f.e."
             value={genre}
-            onChange={(e) => setGenre(e.target.value)}
+            onChange={(e) => {
+              setGenre(e.target.value);
+            }}
           />
         </div>
         <div>
@@ -85,7 +99,7 @@ export default function Home() {
             className="show-search__button"
             disabled={loading}
           >
-            {loading ? "Search..." : "Find"}
+            {loading ? "Searching..." : "Search"}
           </button>
         </div>
       </form>
@@ -93,18 +107,20 @@ export default function Home() {
       <div className="show-search__grid">
         {shows.map((show) => (
           <article key={show.id} className="show-card">
-            <img
+            <Image
+              width={260}
+              height={280}
               className="show-card__poster"
-              src={show.image?.medium || "/undefined.jpeg"}
+              src={show.image?.medium ?? "/undefined.jpeg"}
               alt={show.name}
             />
             <h3 className="show-card__title">{show.name}</h3>
             <h3 className="show-card__genres">
-              Genre : {show.genres?.join(", ") || "N/A"}
+              Genre : {show.genres.join(", ") || "N/A"}
             </h3>
             {show.network?.name && (
               <h3 className="show-card__network">
-                NetWork : {show.network.name}
+                Network : {show.network.name}
               </h3>
             )}
             {show.webChannel?.name && (
@@ -114,7 +130,7 @@ export default function Home() {
             )}
             <p className="show-card__info">
               Year: {getYear(show.premiered)}, Rating:{" "}
-              {show.rating?.average || "N/A"}
+              {show.rating?.average ?? "N/A"}
             </p>
             <p className="show-card__info">Status: {show.status}</p>
           </article>
@@ -122,10 +138,12 @@ export default function Home() {
       </div>
 
       {!loading && hasSearched && shows.length === 0 && !error && (
-        <p className="show-search__empty">Shows not found </p>
+        <p className="show-search__empty">Shows not found</p>
       )}
 
       {error && <p className="show-search__error">Error: {error}</p>}
     </div>
   );
-}
+};
+
+export default Home;
