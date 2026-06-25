@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "tvmaze.com", // на всякий случай
+        hostname: "tvmaze.com",
       },
     ],
   },
