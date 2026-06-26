@@ -1,12 +1,13 @@
 "use client";
 
+import "./reset.css";
 import "./page.css";
 
 import Image from "next/image";
 import { SyntheticEvent, useCallback, useState } from "react";
 
+import { fetchShows } from "./api/api";
 import type { TVMazeSearchResult, TVMazeShow } from "./types/movie";
-import { fetchShows } from "./utils/api";
 
 const Home = () => {
   const [title, setTitle] = useState("");
@@ -111,7 +112,7 @@ const Home = () => {
               width={260}
               height={280}
               className="show-card__poster"
-              src={show.image?.medium ?? "/undefined.jpeg"}
+              src={show.image?.medium ?? "/empty.jpeg"}
               alt={show.name}
             />
             <h3 className="show-card__title">{show.name}</h3>
