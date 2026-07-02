@@ -1,3 +1,7 @@
+import { z } from "zod";
+
+import { TVMazeSearchResultSchema, TVMazeShowSchema } from "./schemas";
+
 export interface ShowFilters {
   title?: string;
   genre?: string;
@@ -5,31 +9,5 @@ export interface ShowFilters {
   limit?: number;
 }
 
-interface TVMazeShowImage {
-  medium?: string;
-  original?: string;
-}
-
-export interface TVMazeShow {
-  id: number;
-  name: string;
-  genres: string[];
-  image?: TVMazeShowImage;
-  premiered: string;
-  rating?: {
-    average: number;
-  };
-  status: string;
-  summary?: string;
-  network?: {
-    name: string;
-  };
-  webChannel?: {
-    name: string;
-  };
-}
-
-export interface TVMazeSearchResult {
-  score: number;
-  show: TVMazeShow;
-}
+export type TVMazeShow = z.infer<typeof TVMazeShowSchema>;
+export type TVMazeSearchResult = z.infer<typeof TVMazeSearchResultSchema>;

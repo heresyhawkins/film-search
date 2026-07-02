@@ -7,7 +7,7 @@ import Image from "next/image";
 import { SyntheticEvent, useCallback, useState } from "react";
 
 import { fetchShows } from "./api/api";
-import type { TVMazeSearchResult, TVMazeShow } from "./types/movie";
+import type { TVMazeShow } from "./types/movie";
 import { getYear } from "./utils/utils";
 
 export const Home = () => {
@@ -24,22 +24,8 @@ export const Home = () => {
     setHasSearched(true);
 
     try {
-      const data = await fetchShows({
-        title,
-        genre,
-      });
-
-      let showsArray: TVMazeShow[] = [];
-
-      if (Array.isArray(data)) {
-        if (data.length > 0 && "show" in data[0]) {
-          showsArray = (data as TVMazeSearchResult[]).map((item) => item.show);
-        } else {
-          showsArray = data as TVMazeShow[];
-        }
-      }
-
-      setShows(showsArray);
+      const shows = await fetchShows({ title, genre });
+      setShows(shows);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to fetch shows data";
@@ -131,7 +117,7 @@ export const Home = () => {
               </h3>
             )}
             <p className="show-card__info">
-              Year: {getYear(show.premiered)}, Rating:{" "}
+              Year: {show.premiered ? getYear(show.premiered) : "N/A"}, Rating:{" "}
               {show.rating?.average ?? "N/A"}
             </p>
             <p className="show-card__info">Status: {show.status}</p>
