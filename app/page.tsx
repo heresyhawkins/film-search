@@ -8,8 +8,9 @@ import { SyntheticEvent, useCallback, useState } from "react";
 
 import { fetchShows } from "./api/api";
 import type { TVMazeSearchResult, TVMazeShow } from "./types/movie";
+import { getYear } from "./utils/utils";
 
-const Home = () => {
+export const Home = () => {
   const [title, setTitle] = useState("");
   const [genre, setGenre] = useState("");
   const [shows, setShows] = useState<TVMazeShow[]>([]);
@@ -24,8 +25,8 @@ const Home = () => {
 
     try {
       const data = await fetchShows({
-        title: title,
-        genre: genre,
+        title,
+        genre,
       });
 
       let showsArray: TVMazeShow[] = [];
@@ -48,17 +49,17 @@ const Home = () => {
     }
   }, [title, genre]);
 
-  const handleSubmit = (e: SyntheticEvent) => {
+  const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
-    void searchShows();
+    await searchShows();
   };
 
-  const getYear = (premieredYear: string) => {
-    if (!premieredYear) {
-      return "N/A";
-    }
+  const handleGenreChange = (event: string) => {
+    setGenre(event);
+  };
 
-    return premieredYear.split("-")[0];
+  const handleTitleChange = (event: string) => {
+    setTitle(event);
   };
 
   return (
@@ -77,7 +78,7 @@ const Home = () => {
             placeholder="Enter the title of the show"
             value={title}
             onChange={(e) => {
-              setTitle(e.target.value);
+              handleTitleChange(e.target.value);
             }}
           />
           <label className="show-search__label" htmlFor="genre-input">
@@ -90,7 +91,7 @@ const Home = () => {
             placeholder="Drama, Comedy, Horror f.e."
             value={genre}
             onChange={(e) => {
-              setGenre(e.target.value);
+              handleGenreChange(e.target.value);
             }}
           />
         </div>
@@ -142,7 +143,9 @@ const Home = () => {
         <p className="show-search__empty">Shows not found</p>
       )}
 
-      {error && <p className="show-search__error">Error: {error}</p>}
+      {!loading && error && (
+        <p className="show-search__error">Error: {error}</p>
+      )}
     </div>
   );
 };

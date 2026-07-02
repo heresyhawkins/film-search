@@ -49,7 +49,21 @@ export default tseslint.config([
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs["core-web-vitals"].rules,
 
-      // TypeScript
+      // TypeScript "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/consistent-type-assertions": [
+        "error",
+        { assertionStyle: "never" },
+      ],
+      "@typescript-eslint/no-restricted-types": [
+        "error",
+        {
+          types: {
+            unknown: {
+              message: "Use a more specific type instead of `unknown`.",
+            },
+          },
+        },
+      ],
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
