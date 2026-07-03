@@ -1,27 +1,23 @@
 "use client";
 
-import "./reset.css";
-import "./page.css";
-
 import Image from "next/image";
 import { SyntheticEvent, useCallback, useState } from "react";
 
 import { fetchShows } from "./api/api";
+import { NOT_AVAILABLE } from "./constants/common";
 import type { TVMazeShow } from "./types/movie";
-import { getYear } from "./utils/utils";
+import { getYear } from "./utils/common";
 
 export const Home = () => {
   const [title, setTitle] = useState("");
   const [genre, setGenre] = useState("");
-  const [shows, setShows] = useState<TVMazeShow[]>([]);
+  const [shows, setShows] = useState<TVMazeShow[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasSearched, setHasSearched] = useState(false);
 
   const searchShows = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setHasSearched(true);
 
     try {
       const shows = await fetchShows({ title, genre });
@@ -35,18 +31,13 @@ export const Home = () => {
     }
   }, [title, genre]);
 
-  const handleSubmit = async (e: SyntheticEvent) => {
-    e.preventDefault();
-    await searchShows();
-  };
-
-  const handleGenreChange = (event: string) => {
-    setGenre(event);
-  };
-
-  const handleTitleChange = (event: string) => {
-    setTitle(event);
-  };
+  const handleSubmit = useCallback(
+    async (e: SyntheticEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      await searchShows();
+    },
+    [searchShows],
+  );
 
   return (
     <div className="show-search">
@@ -64,7 +55,7 @@ export const Home = () => {
             placeholder="Enter the title of the show"
             value={title}
             onChange={(e) => {
-              handleTitleChange(e.target.value);
+              setTitle(e.target.value);
             }}
           />
           <label className="show-search__label" htmlFor="genre-input">
@@ -77,7 +68,7 @@ export const Home = () => {
             placeholder="Drama, Comedy, Horror f.e."
             value={genre}
             onChange={(e) => {
-              handleGenreChange(e.target.value);
+              setGenre(e.target.value);
             }}
           />
         </div>
@@ -93,7 +84,7 @@ export const Home = () => {
       </form>
 
       <div className="show-search__grid">
-        {shows.map((show) => (
+        {shows?.map((show) => (
           <article key={show.id} className="show-card">
             <Image
               width={260}
@@ -104,7 +95,7 @@ export const Home = () => {
             />
             <h3 className="show-card__title">{show.name}</h3>
             <h3 className="show-card__genres">
-              Genre : {show.genres.join(", ") || "N/A"}
+              Genre : {show.genres.join(", ") || NOT_AVAILABLE}
             </h3>
             {show.network?.name && (
               <h3 className="show-card__network">
@@ -117,15 +108,15 @@ export const Home = () => {
               </h3>
             )}
             <p className="show-card__info">
-              Year: {show.premiered ? getYear(show.premiered) : "N/A"}, Rating:{" "}
-              {show.rating?.average ?? "N/A"}
+              Year: {show.premiered ? getYear(show.premiered) : NOT_AVAILABLE},
+              Rating: {show.rating?.average ?? NOT_AVAILABLE}
             </p>
             <p className="show-card__info">Status: {show.status}</p>
           </article>
         ))}
       </div>
 
-      {!loading && hasSearched && shows.length === 0 && !error && (
+      {!loading && shows?.length === 0 && !error && (
         <p className="show-search__empty">Shows not found</p>
       )}
 

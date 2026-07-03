@@ -1,3 +1,6 @@
+import "./reset.css";
+import "./page.css";
+
 import { Metadata } from "next";
 
 interface RootLayoutProps {
