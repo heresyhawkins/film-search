@@ -93,19 +93,19 @@ export const Home = () => {
               src={show.image?.medium ?? "/empty.jpeg"}
               alt={show.name}
             />
-            <h3 className="show-card__title">{show.name}</h3>
-            <h3 className="show-card__genres">
+            <p className="show-card__title">{show.name}</p>
+            <p className="show-card__genres">
               Genre : {show.genres.join(", ") || NOT_AVAILABLE}
-            </h3>
+            </p>
             {show.network?.name && (
-              <h3 className="show-card__network">
+              <p className="show-card__network">
                 Network : {show.network.name}
-              </h3>
+              </p>
             )}
             {show.webChannel?.name && (
-              <h3 className="show-card__network">
+              <p className="show-card__network">
                 Channel : {show.webChannel.name}
-              </h3>
+              </p>
             )}
             <p className="show-card__info">
               Year: {show.premiered ? getYear(show.premiered) : NOT_AVAILABLE},
