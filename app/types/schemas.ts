@@ -12,7 +12,6 @@ export const TVMazeShowSchema = z.object({
   name: z.string(),
   genres: z.array(z.string()),
   image: TVMazeShowImageSchema,
-
   premiered: z.string().nullish(),
 
   rating: z
