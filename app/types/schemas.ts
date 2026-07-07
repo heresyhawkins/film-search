@@ -13,16 +13,13 @@ export const TVMazeShowSchema = z.object({
   genres: z.array(z.string()),
   image: TVMazeShowImageSchema,
   premiered: z.string().nullish(),
-
   rating: z
     .object({
       average: z.number().nullable(),
     })
     .nullish(),
-
   status: z.string(),
   summary: z.string().nullish(),
-
   network: z.object({ name: z.string() }).nullish(),
   webChannel: z.object({ name: z.string() }).nullish(),
 });
