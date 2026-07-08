@@ -6,7 +6,8 @@ import {
   TVMazeShowArraySchema,
 } from "../types/schemas";
 
-const BASE_URL = "https://api.tvmaze.com";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
 
 export class ApiError extends Error {
   constructor(
@@ -19,8 +20,13 @@ export class ApiError extends Error {
   }
 }
 
+const options = {
+  method: "GET",
+  headers: { accept: "application/json", Authorization: `Bearer ${API_TOKEN}` },
+};
+
 const apiFetch = async <T>(url: string, schema: ZodType<T>): Promise<T> => {
-  const response = await fetch(url);
+  const response = await fetch(url, options);
 
   if (!response.ok) {
     throw new ApiError(response.status, url, response.statusText);
@@ -43,7 +49,7 @@ export const fetchShows = async (
 
   if (filters.genre) {
     return apiFetch(
-      `${BASE_URL}/shows?genre=${encodeURIComponent(filters.genre)}`,
+      `${BASE_URL}/shows/people?q=${encodeURIComponent(filters.genre)}`,
       TVMazeShowArraySchema,
     );
   }
