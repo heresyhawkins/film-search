@@ -21,28 +21,6 @@ export const TMDBSearchMovieResponseSchema = z.object({
   total_results: z.number(),
 });
 
-export const TMDBTVShowSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  original_name: z.string().optional(),
-  overview: z.string().nullable(),
-  poster_path: z.string().nullable(),
-  backdrop_path: z.string().nullable(),
-  first_air_date: z.string().nullable(),
-  vote_average: z.number(),
-  genre_ids: z.array(z.number()),
-  origin_country: z.array(z.string()).optional(),
-  adult: z.boolean().optional(),
-  popularity: z.number().optional(),
-});
-
-export const TMDBSearchTVResponseSchema = z.object({
-  page: z.number(),
-  results: z.array(TMDBTVShowSchema),
-  total_pages: z.number(),
-  total_results: z.number(),
-});
-
 export const TMDBGenreSchema = z.object({
   id: z.number(),
   name: z.string(),
