@@ -4,6 +4,9 @@
 import { SyntheticEvent, useCallback, useEffect, useState } from "react";
 
 import { fetchGenres, fetchMovies } from "./api/api";
+import PaginationButton, {
+  Direction,
+} from "./components/PaginationButton/PaginationButton";
 import { NOT_AVAILABLE } from "./constants/common";
 import type { TMDBGenre, TMDBMovie } from "./types/movie";
 import { getYear } from "./utils/common";
@@ -12,6 +15,7 @@ const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
 
 export const Home = () => {
   const [title, setTitle] = useState("");
+  const [page, setPage] = useState(1);
   const [selectedGenreId, setSelectedGenreId] = useState<number | null>(null);
   const [movies, setMovies] = useState<TMDBMovie[] | null>(null);
   const [genres, setGenres] = useState<TMDBGenre[]>([]);
@@ -31,16 +35,20 @@ export const Home = () => {
   }, []);
 
   const searchMovies = useCallback(
-    async (searchTitle?: string, searchGenreId?: number | null) => {
+    async (
+      currentPage: number,
+      searchTitle?: string,
+      searchGenreId?: number | null,
+    ) => {
       setLoading(true);
       setError(null);
 
       try {
-        const movies = await fetchMovies({
+        const fetchedMovies = await fetchMovies(currentPage, {
           title: searchTitle ?? undefined,
           genre: searchGenreId ?? undefined,
         });
-        setMovies(movies);
+        setMovies(fetchedMovies);
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to fetch movies data";
@@ -56,29 +64,45 @@ export const Home = () => {
     async (genreId: number) => {
       if (selectedGenreId === genreId) {
         setSelectedGenreId(null);
-        setMovies(null);
+        setPage(1);
+        await searchMovies(1, title, null);
       } else {
         setSelectedGenreId(genreId);
         setTitle("");
-        await searchMovies(undefined, genreId);
+        setPage(1);
+        await searchMovies(1, undefined, genreId);
       }
     },
-    [selectedGenreId, searchMovies],
+    [selectedGenreId, title, searchMovies],
   );
 
   const handleSubmit = useCallback(
     async (e: SyntheticEvent<HTMLFormElement>) => {
       e.preventDefault();
       setSelectedGenreId(null);
-      await searchMovies(title, null);
+      setPage(1);
+      await searchMovies(1, title, null);
     },
     [title, searchMovies],
   );
 
+  const goToNextPage = useCallback(async () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    await searchMovies(nextPage, title, selectedGenreId);
+  }, [page, title, selectedGenreId, searchMovies]);
+
+  const goToPrevPage = useCallback(async () => {
+    if (page > 1) {
+      const prevPage = page - 1;
+      setPage(prevPage);
+      await searchMovies(prevPage, title, selectedGenreId);
+    }
+  }, [page, title, selectedGenreId, searchMovies]);
+
   return (
     <div className="show-search">
       <h1 className="show-search__title">Movie Search</h1>
-
       <div className="show-search__genre-panel">
         <h3 className="show-search__genre-title">Genre:</h3>
         <div className="show-search__genre-list">
@@ -91,14 +115,13 @@ export const Home = () => {
                   ? "show-search__genre-button--active"
                   : ""
               }`}
-              onClick={() => handleGenreClick(genre.id)}
+              onClick={() => void handleGenreClick(genre.id)}
             >
               {genre.name}
             </button>
           ))}
         </div>
       </div>
-
       <form onSubmit={handleSubmit} className="show-search__form">
         <div>
           <label className="show-search__label" htmlFor="title-input">
@@ -125,7 +148,6 @@ export const Home = () => {
           </button>
         </div>
       </form>
-
       <div className="show-search__grid">
         {movies?.map((movie) => (
           <article key={movie.id} className="show-card">
@@ -159,11 +181,26 @@ export const Home = () => {
           </article>
         ))}
       </div>
-
       {!loading && movies?.length === 0 && !error && (
         <p className="show-search__empty">Movies not found</p>
       )}
-
+      {(movies?.length ?? 0) > 1 && (
+        <div className="show-search__pagination">
+          <PaginationButton
+            onClick={() => void goToPrevPage()}
+            direction={Direction.PREV}
+            disabled={page === 1 || loading}
+            size={30}
+          />
+          <span className="show-search__number-page">Page {page}</span>
+          <PaginationButton
+            onClick={() => void goToNextPage()}
+            direction={Direction.NEXT}
+            disabled={loading}
+            size={30}
+          />
+        </div>
+      )}
       {!loading && error && (
         <p className="show-search__error">Error: {error}</p>
       )}

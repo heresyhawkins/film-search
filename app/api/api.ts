@@ -35,11 +35,12 @@ const apiFetch = async <T>(url: string, schema: ZodType<T>): Promise<T> => {
 };
 
 export const fetchMovies = async (
+  page?: number,
   filters: ShowFilters = {},
 ): Promise<TMDBMovie[]> => {
   if (filters.title) {
     const response = await apiFetch(
-      `${BASE_URL}/search/movie?query=${encodeURIComponent(filters.title)}&page=1&language=en-US`,
+      `${BASE_URL}/search/movie?query=${encodeURIComponent(filters.title)}&page=${page}&language=en-US`,
       TMDBSearchMovieResponseSchema,
     );
 
@@ -48,7 +49,7 @@ export const fetchMovies = async (
 
   if (filters.genre) {
     const response = await apiFetch(
-      `${BASE_URL}/discover/movie?with_genres=${filters.genre}&language=en-US`,
+      `${BASE_URL}/discover/movie?with_genres=${filters.genre}&page=${page}&language=en-US`,
 
       TMDBSearchMovieResponseSchema,
     );

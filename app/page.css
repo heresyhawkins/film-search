@@ -165,3 +165,24 @@ body {
   margin-top: 30px;
   color: #ff6b6b;
 }
+
+.show-search__pagination {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.show-search__number-page {
+  align-self: center;
+}
+
+.show-search__pagination-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8;
+  color: #ffffff;
+  border: none;
+  background: transparent;
+}
