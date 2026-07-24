@@ -1,13 +1,22 @@
 import { z } from "zod";
 
-import { TVMazeSearchResultSchema, TVMazeShowSchema } from "./schemas";
+import {
+  TMDBGenreSchema,
+  TMDBMovieSchema,
+  TMDBSearchMovieResponseSchema,
+} from "./schemas";
 
 export interface ShowFilters {
   title?: string;
-  genre?: string;
+  genre?: number;
   page?: number;
   limit?: number;
 }
 
-export type TVMazeShow = z.infer<typeof TVMazeShowSchema>;
-export type TVMazeSearchResult = z.infer<typeof TVMazeSearchResultSchema>;
+export type TMDBMovie = z.infer<typeof TMDBMovieSchema>;
+
+export type TMDBSearchMovieResponse = z.infer<
+  typeof TMDBSearchMovieResponseSchema
+>;
+
+export type TMDBGenre = z.infer<typeof TMDBGenreSchema>;

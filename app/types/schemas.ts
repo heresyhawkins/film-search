@@ -1,33 +1,31 @@
 import { z } from "zod";
 
-const TVMazeShowImageSchema = z
-  .object({
-    medium: z.string().nullish(),
-    original: z.string().nullish(),
-  })
-  .nullish();
+export const TMDBMovieSchema = z.object({
+  id: z.number(),
+  title: z.string(),
+  original_title: z.string().optional(),
+  overview: z.string().nullable(),
+  poster_path: z.string().nullable(),
+  backdrop_path: z.string().nullable(),
+  release_date: z.string().nullable(),
+  vote_average: z.number(),
+  genre_ids: z.array(z.number()),
+  adult: z.boolean().optional(),
+  popularity: z.number().optional(),
+});
 
-export const TVMazeShowSchema = z.object({
+export const TMDBSearchMovieResponseSchema = z.object({
+  page: z.number(),
+  results: z.array(TMDBMovieSchema),
+  total_pages: z.number(),
+  total_results: z.number(),
+});
+
+export const TMDBGenreSchema = z.object({
   id: z.number(),
   name: z.string(),
-  genres: z.array(z.string()),
-  image: TVMazeShowImageSchema,
-  premiered: z.string().nullish(),
-  rating: z
-    .object({
-      average: z.number().nullable(),
-    })
-    .nullish(),
-  status: z.string(),
-  summary: z.string().nullish(),
-  network: z.object({ name: z.string() }).nullish(),
-  webChannel: z.object({ name: z.string() }).nullish(),
 });
 
-export const TVMazeSearchResultSchema = z.object({
-  score: z.number(),
-  show: TVMazeShowSchema,
+export const TMDBGenreListResponseSchema = z.object({
+  genres: z.array(TMDBGenreSchema),
 });
-
-export const TVMazeShowArraySchema = z.array(TVMazeShowSchema);
-export const TVMazeSearchResultArraySchema = z.array(TVMazeSearchResultSchema);

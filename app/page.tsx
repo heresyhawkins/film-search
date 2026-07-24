@@ -1,48 +1,127 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import Image from "next/image";
-import { SyntheticEvent, useCallback, useState } from "react";
+import { SyntheticEvent, useCallback, useEffect, useState } from "react";
 
-import { fetchShows } from "./api/api";
+import { fetchGenres, fetchMovies } from "./api/api";
+import PaginationButton, {
+  Direction,
+} from "./components/PaginationButton/PaginationButton";
 import { NOT_AVAILABLE } from "./constants/common";
-import type { TVMazeShow } from "./types/movie";
+import type { TMDBGenre, TMDBMovie } from "./types/movie";
 import { getYear } from "./utils/common";
+
+const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
 
 export const Home = () => {
   const [title, setTitle] = useState("");
-  const [genre, setGenre] = useState("");
-  const [shows, setShows] = useState<TVMazeShow[] | null>(null);
+  const [page, setPage] = useState(1);
+  const [selectedGenreId, setSelectedGenreId] = useState<number | null>(null);
+  const [movies, setMovies] = useState<TMDBMovie[] | null>(null);
+  const [genres, setGenres] = useState<TMDBGenre[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const searchShows = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  useEffect(() => {
+    const loadGenres = async () => {
+      try {
+        const genresList = await fetchGenres();
+        setGenres(genresList);
+      } catch (err) {
+        console.error("Failed to load genres:", err);
+      }
+    };
+    void loadGenres();
+  }, []);
 
-    try {
-      const shows = await fetchShows({ title, genre });
-      setShows(shows);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to fetch shows data";
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  }, [title, genre]);
+  const searchMovies = useCallback(
+    async (
+      currentPage: number,
+      searchTitle?: string,
+      searchGenreId?: number | null,
+    ) => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const fetchedMovies = await fetchMovies(currentPage, {
+          title: searchTitle ?? undefined,
+          genre: searchGenreId ?? undefined,
+        });
+        setMovies(fetchedMovies);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to fetch movies data";
+        setError(message);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
+
+  const handleGenreClick = useCallback(
+    async (genreId: number) => {
+      if (selectedGenreId === genreId) {
+        setSelectedGenreId(null);
+        setPage(1);
+        await searchMovies(1, title, null);
+      } else {
+        setSelectedGenreId(genreId);
+        setTitle("");
+        setPage(1);
+        await searchMovies(1, undefined, genreId);
+      }
+    },
+    [selectedGenreId, title, searchMovies],
+  );
 
   const handleSubmit = useCallback(
     async (e: SyntheticEvent<HTMLFormElement>) => {
       e.preventDefault();
-      await searchShows();
+      setSelectedGenreId(null);
+      setPage(1);
+      await searchMovies(1, title, null);
     },
-    [searchShows],
+    [title, searchMovies],
   );
+
+  const goToNextPage = useCallback(async () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    await searchMovies(nextPage, title, selectedGenreId);
+  }, [page, title, selectedGenreId, searchMovies]);
+
+  const goToPrevPage = useCallback(async () => {
+    if (page > 1) {
+      const prevPage = page - 1;
+      setPage(prevPage);
+      await searchMovies(prevPage, title, selectedGenreId);
+    }
+  }, [page, title, selectedGenreId, searchMovies]);
 
   return (
     <div className="show-search">
-      <h1 className="show-search__title">Show Search</h1>
-
+      <h1 className="show-search__title">Movie Search</h1>
+      <div className="show-search__genre-panel">
+        <h3 className="show-search__genre-title">Genre:</h3>
+        <div className="show-search__genre-list">
+          {genres.map((genre) => (
+            <button
+              key={genre.id}
+              type="button"
+              className={`show-search__genre-button ${
+                selectedGenreId === genre.id
+                  ? "show-search__genre-button--active"
+                  : ""
+              }`}
+              onClick={() => void handleGenreClick(genre.id)}
+            >
+              {genre.name}
+            </button>
+          ))}
+        </div>
+      </div>
       <form onSubmit={handleSubmit} className="show-search__form">
         <div>
           <label className="show-search__label" htmlFor="title-input">
@@ -52,23 +131,10 @@ export const Home = () => {
             id="title-input"
             className="show-search__input"
             type="text"
-            placeholder="Enter the title of the show"
+            placeholder="Enter the title of the movie"
             value={title}
             onChange={(e) => {
               setTitle(e.target.value);
-            }}
-          />
-          <label className="show-search__label" htmlFor="genre-input">
-            Genre
-          </label>
-          <input
-            id="genre-input"
-            className="show-search__input"
-            type="text"
-            placeholder="Drama, Comedy, Horror f.e."
-            value={genre}
-            onChange={(e) => {
-              setGenre(e.target.value);
             }}
           />
         </div>
@@ -82,44 +148,59 @@ export const Home = () => {
           </button>
         </div>
       </form>
-
       <div className="show-search__grid">
-        {shows?.map((show) => (
-          <article key={show.id} className="show-card">
-            <Image
+        {movies?.map((movie) => (
+          <article key={movie.id} className="show-card">
+            <img
               width={260}
-              height={280}
+              height={390}
               className="show-card__poster"
-              src={show.image?.medium ?? "/empty.jpeg"}
-              alt={show.name}
+              src={
+                movie.poster_path
+                  ? `${IMAGE_BASE_URL}${movie.poster_path}`
+                  : "/empty.jpeg"
+              }
+              alt={movie.title}
             />
-            <p className="show-card__title">{show.name}</p>
+            <p className="show-card__title">{movie.title}</p>
             <p className="show-card__genres">
-              Genre : {show.genres.join(", ") || NOT_AVAILABLE}
+              Genres: {movie.genre_ids.join(", ") || NOT_AVAILABLE}
             </p>
-            {show.network?.name && (
-              <p className="show-card__network">
-                Network : {show.network.name}
-              </p>
-            )}
-            {show.webChannel?.name && (
-              <p className="show-card__network">
-                Channel : {show.webChannel.name}
-              </p>
-            )}
             <p className="show-card__info">
-              Year: {show.premiered ? getYear(show.premiered) : NOT_AVAILABLE},
-              Rating: {show.rating?.average ?? NOT_AVAILABLE}
+              Year:{" "}
+              {movie.release_date ? getYear(movie.release_date) : NOT_AVAILABLE}
+              , Rating: {movie.vote_average || NOT_AVAILABLE}
             </p>
-            <p className="show-card__info">Status: {show.status}</p>
+            {movie.overview && (
+              <p className="show-card__overview">
+                {movie.overview.length > 150
+                  ? `${movie.overview.substring(0, 150)}...`
+                  : movie.overview}
+              </p>
+            )}
           </article>
         ))}
       </div>
-
-      {!loading && shows?.length === 0 && !error && (
-        <p className="show-search__empty">Shows not found</p>
+      {!loading && movies?.length === 0 && !error && (
+        <p className="show-search__empty">Movies not found</p>
       )}
-
+      {(movies?.length ?? 0) > 1 && (
+        <div className="show-search__pagination">
+          <PaginationButton
+            onClick={() => void goToPrevPage()}
+            direction={Direction.PREV}
+            disabled={page === 1 || loading}
+            size={30}
+          />
+          <span className="show-search__number-page">Page {page}</span>
+          <PaginationButton
+            onClick={() => void goToNextPage()}
+            direction={Direction.NEXT}
+            disabled={loading}
+            size={30}
+          />
+        </div>
+      )}
       {!loading && error && (
         <p className="show-search__error">Error: {error}</p>
       )}
