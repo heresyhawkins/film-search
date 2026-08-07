@@ -1,5 +1,6 @@
 "use client";
 
+import clsx from "clsx";
 import Image from "next/image";
 import type { SubmitEvent } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -35,6 +36,7 @@ export const Home = () => {
         console.error("Failed to load genres:", err);
       }
     };
+
     void loadGenres();
   }, []);
 
@@ -125,6 +127,7 @@ export const Home = () => {
     },
     [page, totalPages, title, selectedGenreId, searchMovies],
   );
+
   const genreMap = useMemo(() => {
     return new Map(genres.map((genre) => [genre.id, genre.name]));
   }, [genres]);
@@ -139,24 +142,18 @@ export const Home = () => {
             <button
               key={genre.id}
               type="button"
-              className={`show-search__genre-button ${
-                selectedGenreId === genre.id
-                  ? "show-search__genre-button--active"
-                  : ""
-              }`}
-              onClick={() => void handleGenreClick(genre.id)}
+              className={clsx("show-search__genre-button", {
+                "show-search__genre-button--active":
+                  selectedGenreId === genre.id,
+              })}
+              onClick={() => handleGenreClick(genre.id)}
             >
               {genre.name}
             </button>
           ))}
         </div>
       </div>
-      <form
-        className="show-search__form"
-        onSubmit={(e) => {
-          void handleSubmit(e);
-        }}
-      >
+      <form className="show-search__form" onSubmit={handleSubmit}>
         <div>
           <label className="show-search__label" htmlFor="title-input">
             Title
@@ -207,7 +204,9 @@ export const Home = () => {
             <p className="show-card__info">
               Year:{" "}
               {movie.release_date ? getYear(movie.release_date) : NOT_AVAILABLE}
-              , Rating: {movie.vote_average ?? NOT_AVAILABLE}
+            </p>
+            <p className="show-card__info">
+              Rating: {movie.vote_average ?? NOT_AVAILABLE}
             </p>
             {movie.overview && (
               <p className="show-card__overview">
@@ -219,6 +218,7 @@ export const Home = () => {
           </article>
         ))}
       </div>
+
       {!loading && error && (
         <p className="show-search__error">Error: {error}</p>
       )}
@@ -230,13 +230,13 @@ export const Home = () => {
       {(movies?.length ?? 0) > 0 && (
         <div className="show-search__pagination">
           <PaginationButton
-            onClick={() => void handlePageChange(-1)}
+            onClick={() => handlePageChange(-1)}
             direction={Direction.PREV}
             disabled={page === 1 || loading}
           />
           <span className="show-search__number-page">Page {page}</span>
           <PaginationButton
-            onClick={() => void handlePageChange(1)}
+            onClick={() => handlePageChange(1)}
             direction={Direction.NEXT}
             disabled={loading || page >= totalPages}
           />

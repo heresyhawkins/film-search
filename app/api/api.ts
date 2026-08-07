@@ -59,11 +59,7 @@ export const fetchMovies = async (
     url.searchParams.set("with_genres", String(filters.genre));
     url.searchParams.set("page", String(page));
 
-    const response = await apiFetch(
-      `${url}`,
-
-      TMDBSearchMovieResponseSchema,
-    );
+    const response = await apiFetch(`${url}`, TMDBSearchMovieResponseSchema);
 
     return response;
   }
