@@ -1,20 +1,24 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { SyntheticEvent, useCallback, useEffect, useState } from "react";
+import Image from "next/image";
+import type { SubmitEvent } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { fetchGenres, fetchMovies } from "./api/api";
 import PaginationButton, {
   Direction,
 } from "./components/PaginationButton/PaginationButton";
-import { NOT_AVAILABLE } from "./constants/common";
+import {
+  IMAGE_BASE_URL,
+  NOT_AVAILABLE,
+  OVERVIEW_MAX_LENGTH,
+} from "./constants/common";
 import type { TMDBGenre, TMDBMovie } from "./types/movie";
 import { getYear } from "./utils/common";
 
-const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
-
 export const Home = () => {
   const [title, setTitle] = useState("");
+  const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
   const [selectedGenreId, setSelectedGenreId] = useState<number | null>(null);
   const [movies, setMovies] = useState<TMDBMovie[] | null>(null);
@@ -39,20 +43,27 @@ export const Home = () => {
       currentPage: number,
       searchTitle?: string,
       searchGenreId?: number | null,
-    ) => {
+    ): Promise<boolean> => {
       setLoading(true);
       setError(null);
 
       try {
-        const fetchedMovies = await fetchMovies(currentPage, {
+        const response = await fetchMovies(currentPage, {
           title: searchTitle ?? undefined,
           genre: searchGenreId ?? undefined,
         });
-        setMovies(fetchedMovies);
+
+        setMovies(response.results);
+        setTotalPages(response.total_pages);
+
+        return true;
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to fetch movies data";
+
         setError(message);
+
+        return false;
       } finally {
         setLoading(false);
       }
@@ -63,42 +74,60 @@ export const Home = () => {
   const handleGenreClick = useCallback(
     async (genreId: number) => {
       if (selectedGenreId === genreId) {
-        setSelectedGenreId(null);
-        setPage(1);
-        await searchMovies(1, title, null);
-      } else {
+        const success = await searchMovies(1, title, null);
+
+        if (success) {
+          setSelectedGenreId(null);
+          setPage(1);
+        }
+
+        return;
+      }
+
+      const success = await searchMovies(1, undefined, genreId);
+
+      if (success) {
         setSelectedGenreId(genreId);
         setTitle("");
         setPage(1);
-        await searchMovies(1, undefined, genreId);
       }
     },
     [selectedGenreId, title, searchMovies],
   );
 
   const handleSubmit = useCallback(
-    async (e: SyntheticEvent<HTMLFormElement>) => {
+    async (e: SubmitEvent) => {
       e.preventDefault();
-      setSelectedGenreId(null);
-      setPage(1);
-      await searchMovies(1, title, null);
+
+      const success = await searchMovies(1, title, null);
+
+      if (success) {
+        setSelectedGenreId(null);
+        setPage(1);
+      }
     },
     [title, searchMovies],
   );
 
-  const goToNextPage = useCallback(async () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    await searchMovies(nextPage, title, selectedGenreId);
-  }, [page, title, selectedGenreId, searchMovies]);
+  const handlePageChange = useCallback(
+    async (delta: number) => {
+      const newPage = page + delta;
 
-  const goToPrevPage = useCallback(async () => {
-    if (page > 1) {
-      const prevPage = page - 1;
-      setPage(prevPage);
-      await searchMovies(prevPage, title, selectedGenreId);
-    }
-  }, [page, title, selectedGenreId, searchMovies]);
+      if (newPage < 1 || newPage > totalPages) {
+        return;
+      }
+
+      const success = await searchMovies(newPage, title, selectedGenreId);
+
+      if (success) {
+        setPage(newPage);
+      }
+    },
+    [page, totalPages, title, selectedGenreId, searchMovies],
+  );
+  const genreMap = useMemo(() => {
+    return new Map(genres.map((genre) => [genre.id, genre.name]));
+  }, [genres]);
 
   return (
     <div className="show-search">
@@ -122,7 +151,12 @@ export const Home = () => {
           ))}
         </div>
       </div>
-      <form onSubmit={handleSubmit} className="show-search__form">
+      <form
+        className="show-search__form"
+        onSubmit={(e) => {
+          void handleSubmit(e);
+        }}
+      >
         <div>
           <label className="show-search__label" htmlFor="title-input">
             Title
@@ -151,7 +185,7 @@ export const Home = () => {
       <div className="show-search__grid">
         {movies?.map((movie) => (
           <article key={movie.id} className="show-card">
-            <img
+            <Image
               width={260}
               height={390}
               className="show-card__poster"
@@ -161,48 +195,52 @@ export const Home = () => {
                   : "/empty.jpeg"
               }
               alt={movie.title}
+              unoptimized
             />
             <p className="show-card__title">{movie.title}</p>
             <p className="show-card__genres">
-              Genres: {movie.genre_ids.join(", ") || NOT_AVAILABLE}
+              Genres:{" "}
+              {movie.genre_ids.length
+                ? movie.genre_ids.map((id) => genreMap.get(id)).join(", ")
+                : NOT_AVAILABLE}
             </p>
             <p className="show-card__info">
               Year:{" "}
               {movie.release_date ? getYear(movie.release_date) : NOT_AVAILABLE}
-              , Rating: {movie.vote_average || NOT_AVAILABLE}
+              , Rating: {movie.vote_average ?? NOT_AVAILABLE}
             </p>
             {movie.overview && (
               <p className="show-card__overview">
-                {movie.overview.length > 150
-                  ? `${movie.overview.substring(0, 150)}...`
+                {movie.overview.length > OVERVIEW_MAX_LENGTH
+                  ? `${movie.overview.substring(0, OVERVIEW_MAX_LENGTH)}...`
                   : movie.overview}
               </p>
             )}
           </article>
         ))}
       </div>
+      {!loading && error && (
+        <p className="show-search__error">Error: {error}</p>
+      )}
+
       {!loading && movies?.length === 0 && !error && (
         <p className="show-search__empty">Movies not found</p>
       )}
-      {(movies?.length ?? 0) > 1 && (
+
+      {(movies?.length ?? 0) > 0 && (
         <div className="show-search__pagination">
           <PaginationButton
-            onClick={() => void goToPrevPage()}
+            onClick={() => void handlePageChange(-1)}
             direction={Direction.PREV}
             disabled={page === 1 || loading}
-            size={30}
           />
           <span className="show-search__number-page">Page {page}</span>
           <PaginationButton
-            onClick={() => void goToNextPage()}
+            onClick={() => void handlePageChange(1)}
             direction={Direction.NEXT}
-            disabled={loading}
-            size={30}
+            disabled={loading || page >= totalPages}
           />
         </div>
-      )}
-      {!loading && error && (
-        <p className="show-search__error">Error: {error}</p>
       )}
     </div>
   );

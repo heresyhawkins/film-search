@@ -178,6 +178,7 @@ body {
 }
 
 .show-search__pagination-button {
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -185,4 +186,10 @@ body {
   color: #ffffff;
   border: none;
   background: transparent;
+}
+
+.show-search__pagination-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+  color: #ffffff;
 }

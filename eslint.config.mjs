@@ -8,7 +8,7 @@ import nextPlugin from "@next/eslint-plugin-next";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 
 export default tseslint.config([
-  { ignores: ["dist", "coverage", "node_modules", ".next"] },
+  { ignores: ["dist", "coverage", "node_modules", ".next", "next.config.ts"] },
   {
     extends: [
       js.configs.recommended,
@@ -24,7 +24,8 @@ export default tseslint.config([
         ...globals.node,
       },
       parserOptions: {
-        projectService: true,
+        project: "./tsconfig.json",
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     plugins: {

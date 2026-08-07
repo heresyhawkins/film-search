@@ -8,7 +8,7 @@ export const TMDBMovieSchema = z.object({
   poster_path: z.string().nullable(),
   backdrop_path: z.string().nullable(),
   release_date: z.string().nullable(),
-  vote_average: z.number(),
+  vote_average: z.number().nullable(),
   genre_ids: z.array(z.number()),
   adult: z.boolean().optional(),
   popularity: z.number().optional(),

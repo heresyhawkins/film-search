@@ -1,11 +1,11 @@
 import { NOT_AVAILABLE } from "../constants/common";
 
-export const getYear = (premieredYear: string | null): string => {
-  if (!premieredYear) {
+export const getYear = (releaseDate: string | null): string => {
+  if (!releaseDate) {
     return NOT_AVAILABLE;
   }
 
-  const date = new Date(premieredYear);
+  const date = new Date(releaseDate);
   const year = date.getFullYear();
 
   if (isNaN(year)) {

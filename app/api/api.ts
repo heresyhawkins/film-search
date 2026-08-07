@@ -1,9 +1,15 @@
 import { type ZodType } from "zod";
 
-import type { ShowFilters, TMDBMovie } from "../types/movie";
+import type { ShowFilters, TMDBSearchMovieResponse } from "../types/movie";
 import type { TMDBGenre } from "../types/movie";
-import { TMDBSearchMovieResponseSchema } from "../types/schemas";
-import { TMDBGenreListResponseSchema } from "../types/schemas";
+import {
+  TMDBGenreListResponseSchema,
+  TMDBSearchMovieResponseSchema,
+} from "../types/schemas";
+
+if (!process.env.NEXT_PUBLIC_API_URL || !process.env.NEXT_PUBLIC_API_TOKEN) {
+  throw new Error("NEXT_PUBLIC_API_URL and NEXT_PUBLIC_API_TOKEN must be set");
+}
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 const API_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
@@ -37,27 +43,37 @@ const apiFetch = async <T>(url: string, schema: ZodType<T>): Promise<T> => {
 export const fetchMovies = async (
   page?: number,
   filters: ShowFilters = {},
-): Promise<TMDBMovie[]> => {
+): Promise<TMDBSearchMovieResponse> => {
   if (filters.title) {
-    const response = await apiFetch(
-      `${BASE_URL}/search/movie?query=${encodeURIComponent(filters.title)}&page=${page}&language=en-US`,
-      TMDBSearchMovieResponseSchema,
-    );
+    const url = new URL(`${BASE_URL}/search/movie`);
+    url.searchParams.set("query", filters.title);
+    url.searchParams.set("page", String(page));
 
-    return response.results;
+    const response = await apiFetch(`${url}`, TMDBSearchMovieResponseSchema);
+
+    return response;
   }
 
   if (filters.genre) {
+    const url = new URL(`${BASE_URL}/discover/movie`);
+    url.searchParams.set("with_genres", String(filters.genre));
+    url.searchParams.set("page", String(page));
+
     const response = await apiFetch(
-      `${BASE_URL}/discover/movie?with_genres=${filters.genre}&page=${page}&language=en-US`,
+      `${url}`,
 
       TMDBSearchMovieResponseSchema,
     );
 
-    return response.results;
+    return response;
   }
 
-  return [];
+  const response = await apiFetch(
+    `${BASE_URL}/discover/movie?page=${page}&language=en-US`,
+    TMDBSearchMovieResponseSchema,
+  );
+
+  return response;
 };
 
 export const fetchGenres = async (): Promise<TMDBGenre[]> => {

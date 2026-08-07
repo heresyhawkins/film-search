@@ -5,17 +5,17 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "static.tvmaze.com",
-      },
-      {
-        protocol: "https",
-        hostname: "tvmaze.com",
-      },
-      {
-        protocol: "https",
         hostname: "image.tmdb.org",
       },
     ],
+  },
+  turbopack: {
+    rules: {
+      "*.svg": {
+        loaders: ["@svgr/webpack"],
+        as: "*.js",
+      },
+    },
   },
 };
 

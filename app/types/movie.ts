@@ -9,8 +9,6 @@ import {
 export interface ShowFilters {
   title?: string;
   genre?: number;
-  page?: number;
-  limit?: number;
 }
 
 export type TMDBMovie = z.infer<typeof TMDBMovieSchema>;
