@@ -3,12 +3,12 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 import reactPlugin from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
+import reactRefresh from "eslint-plugin-react-refresh";
 import jsxA11y from "eslint-plugin-jsx-a11y";
-import nextPlugin from "@next/eslint-plugin-next";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 
 export default tseslint.config([
-  { ignores: ["dist", "coverage", "node_modules", ".next", "next.config.ts"] },
+  { ignores: ["dist", "coverage", "node_modules"] },
   {
     extends: [
       js.configs.recommended,
@@ -31,8 +31,8 @@ export default tseslint.config([
     plugins: {
       react: reactPlugin,
       "react-hooks": reactHooks,
+      "react-refresh": reactRefresh,
       "jsx-a11y": jsxA11y,
-      "@next/next": nextPlugin,
       "simple-import-sort": simpleImportSort,
     },
     rules: {
@@ -46,11 +46,14 @@ export default tseslint.config([
       // Accessibility
       ...jsxA11y.flatConfigs.recommended.rules,
 
-      // Next.js
-      ...nextPlugin.configs.recommended.rules,
-      ...nextPlugin.configs["core-web-vitals"].rules,
+      // React Refresh (Vite HMR)
+      "react-refresh/only-export-components": [
+        "warn",
+        { allowConstantExport: true },
+      ],
 
-      // TypeScript "@typescript-eslint/no-explicit-any": "error",
+      // TypeScript
+      "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/consistent-type-assertions": [
         "error",
         { assertionStyle: "never" },

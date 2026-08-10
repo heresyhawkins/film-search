@@ -1,18 +1,21 @@
 import { type ZodType } from "zod";
 
-import type { ShowFilters, TMDBSearchMovieResponse } from "../types/movie";
-import type { TMDBGenre } from "../types/movie";
+import type {
+  ShowFilters,
+  TMDBGenre,
+  TMDBSearchMovieResponse,
+} from "../types/movie";
 import {
   TMDBGenreListResponseSchema,
   TMDBSearchMovieResponseSchema,
 } from "../types/schemas";
 
-if (!process.env.NEXT_PUBLIC_API_URL || !process.env.NEXT_PUBLIC_API_TOKEN) {
-  throw new Error("NEXT_PUBLIC_API_URL and NEXT_PUBLIC_API_TOKEN must be set");
-}
+const BASE_URL = import.meta.env.VITE_API_URL;
+const API_TOKEN = import.meta.env.VITE_API_TOKEN;
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-const API_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
+if (!BASE_URL || !API_TOKEN) {
+  throw new Error("VITE_API_URL and VITE_API_TOKEN must be set");
+}
 
 export class ApiError extends Error {
   constructor(
@@ -25,58 +28,65 @@ export class ApiError extends Error {
   }
 }
 
-const options = {
-  method: "GET",
-  headers: { accept: "application/json", Authorization: `Bearer ${API_TOKEN}` },
-};
+// Params whose value is null/undefined/empty are skipped, so callers can pass optional filters as-is.
+type QueryParams = Record<string, string | number | null | undefined>;
 
-const apiFetch = async <T>(url: string, schema: ZodType<T>): Promise<T> => {
-  const response = await fetch(url, options);
+const request = async <T>(
+  path: string,
+  params: QueryParams,
+  schema: ZodType<T>,
+): Promise<T> => {
+  const url = new URL(`${BASE_URL}${path}`);
+  url.searchParams.set("language", "en-US");
+
+  for (const [key, value] of Object.entries(params)) {
+    if (value != null && value !== "") {
+      url.searchParams.set(key, String(value));
+    }
+  }
+
+  const response = await fetch(url, {
+    headers: {
+      accept: "application/json",
+      Authorization: `Bearer ${API_TOKEN}`,
+    },
+  });
 
   if (!response.ok) {
-    throw new ApiError(response.status, url, response.statusText);
+    throw new ApiError(response.status, url.toString(), response.statusText);
   }
 
   return schema.parse(await response.json());
 };
 
-export const fetchMovies = async (
-  page?: number,
+// TMDB has no endpoint that accepts a free-text query and a genre filter together:
+// /search/movie ignores `with_genres` and /discover/movie ignores `query`. A title
+// search therefore takes precedence over a genre filter, matching the exclusive UI.
+export const fetchMovies = (
+  page = 1,
   filters: ShowFilters = {},
 ): Promise<TMDBSearchMovieResponse> => {
   if (filters.title) {
-    const url = new URL(`${BASE_URL}/search/movie`);
-    url.searchParams.set("query", filters.title);
-    url.searchParams.set("page", String(page));
-
-    const response = await apiFetch(`${url}`, TMDBSearchMovieResponseSchema);
-
-    return response;
+    return request(
+      "/search/movie",
+      { query: filters.title, page },
+      TMDBSearchMovieResponseSchema,
+    );
   }
 
-  if (filters.genre) {
-    const url = new URL(`${BASE_URL}/discover/movie`);
-    url.searchParams.set("with_genres", String(filters.genre));
-    url.searchParams.set("page", String(page));
-
-    const response = await apiFetch(`${url}`, TMDBSearchMovieResponseSchema);
-
-    return response;
-  }
-
-  const response = await apiFetch(
-    `${BASE_URL}/discover/movie?page=${page}&language=en-US`,
+  return request(
+    "/discover/movie",
+    { with_genres: filters.genre, page },
     TMDBSearchMovieResponseSchema,
   );
-
-  return response;
 };
 
 export const fetchGenres = async (): Promise<TMDBGenre[]> => {
-  const response = await apiFetch(
-    `${BASE_URL}/genre/movie/list?language=en-US`,
+  const { genres } = await request(
+    "/genre/movie/list",
+    {},
     TMDBGenreListResponseSchema,
   );
 
-  return response.genres;
+  return genres;
 };
