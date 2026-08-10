@@ -28,20 +28,21 @@ export class ApiError extends Error {
   }
 }
 
-// Params whose value is null/undefined/empty are skipped, so callers can pass optional filters as-is.
 type QueryParams = Record<string, string | number | null | undefined>;
 
 const request = async <T>(
   path: string,
-  params: QueryParams,
   schema: ZodType<T>,
+  params?: QueryParams,
 ): Promise<T> => {
   const url = new URL(`${BASE_URL}${path}`);
   url.searchParams.set("language", "en-US");
 
-  for (const [key, value] of Object.entries(params)) {
-    if (value != null && value !== "") {
-      url.searchParams.set(key, String(value));
+  if (params) {
+    for (const [key, value] of Object.entries(params)) {
+      if (value != null && value !== "") {
+        url.searchParams.set(key, String(value));
+      }
     }
   }
 
@@ -59,32 +60,26 @@ const request = async <T>(
   return schema.parse(await response.json());
 };
 
-// TMDB has no endpoint that accepts a free-text query and a genre filter together:
-// /search/movie ignores `with_genres` and /discover/movie ignores `query`. A title
-// search therefore takes precedence over a genre filter, matching the exclusive UI.
 export const fetchMovies = (
   page = 1,
   filters: ShowFilters = {},
 ): Promise<TMDBSearchMovieResponse> => {
   if (filters.title) {
-    return request(
-      "/search/movie",
-      { query: filters.title, page },
-      TMDBSearchMovieResponseSchema,
-    );
+    return request("/search/movie", TMDBSearchMovieResponseSchema, {
+      query: filters.title,
+      page,
+    });
   }
 
-  return request(
-    "/discover/movie",
-    { with_genres: filters.genre, page },
-    TMDBSearchMovieResponseSchema,
-  );
+  return request("/discover/movie", TMDBSearchMovieResponseSchema, {
+    with_genres: filters.genre,
+    page,
+  });
 };
 
 export const fetchGenres = async (): Promise<TMDBGenre[]> => {
   const { genres } = await request(
     "/genre/movie/list",
-    {},
     TMDBGenreListResponseSchema,
   );
 
