@@ -182,7 +182,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8;
+  padding: 8px;
   color: #ffffff;
   border: none;
   background: transparent;
