@@ -1,12 +1,8 @@
 import clsx from "clsx";
 
-import NextIcon from "../../assets/nextArrow.svg";
-import PrevIcon from "../../assets/prevArrow.svg";
-
-export enum Direction {
-  PREV = "prev",
-  NEXT = "next",
-}
+import NextIcon from "../../assets/nextArrow.svg?react";
+import PrevIcon from "../../assets/prevArrow.svg?react";
+import { Direction } from "./types";
 
 interface PaginationButtonProps {
   onClick: () => void;

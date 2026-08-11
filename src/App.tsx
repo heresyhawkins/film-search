@@ -1,14 +1,10 @@
-"use client";
-
 import clsx from "clsx";
-import Image from "next/image";
 import type { SubmitEvent } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { fetchGenres, fetchMovies } from "./api/api";
-import PaginationButton, {
-  Direction,
-} from "./components/PaginationButton/PaginationButton";
+import { fetchGenres, fetchMovies } from "./api/tmdb";
+import PaginationButton from "./components/PaginationButton/PaginationButton";
+import { Direction } from "./components/PaginationButton/types";
 import {
   IMAGE_BASE_URL,
   NOT_AVAILABLE,
@@ -17,7 +13,7 @@ import {
 import type { TMDBGenre, TMDBMovie } from "./types/movie";
 import { getYear } from "./utils/common";
 
-export const Home = () => {
+export const App = () => {
   const [title, setTitle] = useState("");
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
@@ -182,7 +178,7 @@ export const Home = () => {
       <div className="show-search__grid">
         {movies?.map((movie) => (
           <article key={movie.id} className="show-card">
-            <Image
+            <img
               width={260}
               height={390}
               className="show-card__poster"
@@ -192,7 +188,6 @@ export const Home = () => {
                   : "/empty.jpeg"
               }
               alt={movie.title}
-              unoptimized
             />
             <p className="show-card__title">{movie.title}</p>
             <p className="show-card__genres">
@@ -246,4 +241,4 @@ export const Home = () => {
   );
 };
 
-export default Home;
+export default App;
