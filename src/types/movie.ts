@@ -8,7 +8,7 @@ import {
 
 export interface ShowFilters {
   title?: string;
-  genre?: number;
+  genre?: number | null;
 }
 
 export type TMDBMovie = z.infer<typeof TMDBMovieSchema>;

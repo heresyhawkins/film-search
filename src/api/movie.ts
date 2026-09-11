@@ -14,7 +14,7 @@ export const fetchMovies = (
   }
 
   return request("/discover/movie", TMDBSearchMovieResponseSchema, {
-    with_genres: filters.genre,
+    ...(filters.genre && { with_genres: filters.genre }),
     page,
   });
 };

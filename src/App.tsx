@@ -78,14 +78,14 @@ export const App = () => {
   }, []);
 
   useEffect(() => {
-    const searchMovies = async (currentPage: number): Promise<void> => {
+    const searchMovies = async (): Promise<void> => {
       setLoading(true);
       setError(null);
 
       try {
-        const response = await fetchMovies(currentPage, {
+        const response = await fetchMovies(page, {
           title,
-          genre: selectedGenreId ?? undefined,
+          genre: selectedGenreId,
         });
 
         setMovies(response.results);
@@ -100,7 +100,7 @@ export const App = () => {
       }
     };
 
-    void searchMovies(page);
+    void searchMovies();
   }, [page, selectedGenreId, title]);
 
   return (
