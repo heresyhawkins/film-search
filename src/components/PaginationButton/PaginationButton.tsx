@@ -5,15 +5,15 @@ import PrevIcon from "../../assets/prevArrow.svg?react";
 import { Direction } from "./types";
 
 interface PaginationButtonProps {
-  onClick: () => void;
   disabled?: boolean;
   direction: Direction;
+  onClick: () => void;
 }
 
-const PaginationButton = ({
-  onClick,
+export const PaginationButton = ({
   disabled,
   direction,
+  onClick,
 }: PaginationButtonProps) => {
   const label = direction === Direction.PREV ? "Prev Page" : "Next Page";
   const Icon = direction === Direction.PREV ? PrevIcon : NextIcon;
@@ -24,13 +24,11 @@ const PaginationButton = ({
       className={clsx("show-search__pagination-button", {
         "show-search__pagination-button--disabled": disabled,
       })}
-      onClick={onClick}
       disabled={disabled}
       aria-label={label}
+      onClick={onClick}
     >
-      <Icon color="white" aria-hidden="true" />
+      <Icon aria-hidden="true" />
     </button>
   );
 };
-
-export default PaginationButton;

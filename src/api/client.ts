@@ -1,14 +1,4 @@
-import { type ZodType } from "zod";
-
-import type {
-  ShowFilters,
-  TMDBGenre,
-  TMDBSearchMovieResponse,
-} from "../types/movie";
-import {
-  TMDBGenreListResponseSchema,
-  TMDBSearchMovieResponseSchema,
-} from "../types/schemas";
+import { ZodType } from "zod";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 const API_TOKEN = import.meta.env.VITE_API_TOKEN;
@@ -30,7 +20,7 @@ export class ApiError extends Error {
 
 type QueryParams = Record<string, string | number | null | undefined>;
 
-const request = async <T>(
+export const request = async <T>(
   path: string,
   schema: ZodType<T>,
   params?: QueryParams,
@@ -58,30 +48,4 @@ const request = async <T>(
   }
 
   return schema.parse(await response.json());
-};
-
-export const fetchMovies = (
-  page = 1,
-  filters: ShowFilters = {},
-): Promise<TMDBSearchMovieResponse> => {
-  if (filters.title) {
-    return request("/search/movie", TMDBSearchMovieResponseSchema, {
-      query: filters.title,
-      page,
-    });
-  }
-
-  return request("/discover/movie", TMDBSearchMovieResponseSchema, {
-    with_genres: filters.genre,
-    page,
-  });
-};
-
-export const fetchGenres = async (): Promise<TMDBGenre[]> => {
-  const { genres } = await request(
-    "/genre/movie/list",
-    TMDBGenreListResponseSchema,
-  );
-
-  return genres;
 };

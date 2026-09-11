@@ -2,8 +2,9 @@ import clsx from "clsx";
 import type { SubmitEvent } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { fetchGenres, fetchMovies } from "./api/tmdb";
-import PaginationButton from "./components/PaginationButton/PaginationButton";
+import { fetchGenres } from "./api/genre";
+import { fetchMovies } from "./api/movie";
+import { PaginationButton } from "./components/PaginationButton/PaginationButton";
 import { Direction } from "./components/PaginationButton/types";
 import {
   IMAGE_BASE_URL,
@@ -23,6 +24,46 @@ export const App = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const handleGenreClick = useCallback(
+    (genreId: number) => {
+      if (selectedGenreId === genreId) {
+        setSelectedGenreId(null);
+        setPage(1);
+
+        return;
+      }
+
+      setSelectedGenreId(genreId);
+      setTitle("");
+      setPage(1);
+    },
+    [selectedGenreId],
+  );
+
+  const handleSubmit = useCallback((e: SubmitEvent) => {
+    e.preventDefault();
+
+    setSelectedGenreId(null);
+    setPage(1);
+  }, []);
+
+  const handlePageChange = useCallback(
+    (delta: number) => {
+      const newPage = page + delta;
+
+      if (newPage < 1 || newPage > totalPages) {
+        return;
+      }
+
+      setPage(newPage);
+    },
+    [page, totalPages],
+  );
+
+  const genreMap = useMemo(() => {
+    return new Map(genres.map((genre) => [genre.id, genre.name]));
+  }, [genres]);
+
   useEffect(() => {
     const loadGenres = async () => {
       try {
@@ -36,97 +77,31 @@ export const App = () => {
     void loadGenres();
   }, []);
 
-  const searchMovies = useCallback(
-    async (
-      currentPage: number,
-      searchTitle?: string,
-      searchGenreId?: number | null,
-    ): Promise<boolean> => {
+  useEffect(() => {
+    const searchMovies = async (currentPage: number): Promise<void> => {
       setLoading(true);
       setError(null);
 
       try {
         const response = await fetchMovies(currentPage, {
-          title: searchTitle ?? undefined,
-          genre: searchGenreId ?? undefined,
+          title,
+          genre: selectedGenreId ?? undefined,
         });
 
         setMovies(response.results);
         setTotalPages(response.total_pages);
-
-        return true;
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to fetch movies data";
 
         setError(message);
-
-        return false;
       } finally {
         setLoading(false);
       }
-    },
-    [],
-  );
+    };
 
-  const handleGenreClick = useCallback(
-    async (genreId: number) => {
-      if (selectedGenreId === genreId) {
-        const success = await searchMovies(1, title, null);
-
-        if (success) {
-          setSelectedGenreId(null);
-          setPage(1);
-        }
-
-        return;
-      }
-
-      const success = await searchMovies(1, undefined, genreId);
-
-      if (success) {
-        setSelectedGenreId(genreId);
-        setTitle("");
-        setPage(1);
-      }
-    },
-    [selectedGenreId, title, searchMovies],
-  );
-
-  const handleSubmit = useCallback(
-    async (e: SubmitEvent) => {
-      e.preventDefault();
-
-      const success = await searchMovies(1, title, null);
-
-      if (success) {
-        setSelectedGenreId(null);
-        setPage(1);
-      }
-    },
-    [title, searchMovies],
-  );
-
-  const handlePageChange = useCallback(
-    async (delta: number) => {
-      const newPage = page + delta;
-
-      if (newPage < 1 || newPage > totalPages) {
-        return;
-      }
-
-      const success = await searchMovies(newPage, title, selectedGenreId);
-
-      if (success) {
-        setPage(newPage);
-      }
-    },
-    [page, totalPages, title, selectedGenreId, searchMovies],
-  );
-
-  const genreMap = useMemo(() => {
-    return new Map(genres.map((genre) => [genre.id, genre.name]));
-  }, [genres]);
+    void searchMovies(page);
+  }, [page, selectedGenreId, title]);
 
   return (
     <div className="show-search">
@@ -142,7 +117,9 @@ export const App = () => {
                 "show-search__genre-button--active":
                   selectedGenreId === genre.id,
               })}
-              onClick={() => handleGenreClick(genre.id)}
+              onClick={() => {
+                handleGenreClick(genre.id);
+              }}
             >
               {genre.name}
             </button>
@@ -225,20 +202,24 @@ export const App = () => {
       {(movies?.length ?? 0) > 0 && (
         <div className="show-search__pagination">
           <PaginationButton
-            onClick={() => handlePageChange(-1)}
             direction={Direction.PREV}
             disabled={page === 1 || loading}
+            onClick={() => {
+              handlePageChange(-1);
+            }}
           />
+
           <span className="show-search__number-page">Page {page}</span>
+
           <PaginationButton
-            onClick={() => handlePageChange(1)}
             direction={Direction.NEXT}
             disabled={loading || page >= totalPages}
+            onClick={() => {
+              handlePageChange(1);
+            }}
           />
         </div>
       )}
     </div>
   );
 };
-
-export default App;
